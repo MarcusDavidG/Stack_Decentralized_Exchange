@@ -132,6 +132,29 @@ describe("AMM Tests", () => {
     );
     expect(tokenTwoAmountWithdrawn).toBeLessThan(withdrawableTokenTwoPreSwap);
   });
+
+  it("should return pool info correctly", () => {
+    createPool();
+    addLiquidity(alice, 1000000, 500000);
+
+    const { result: poolId } = getPoolId();
+    const { result } = simnet.callReadOnlyFn(
+      "amm",
+      "get-pool-info",
+      [poolId],
+      alice
+    );
+
+    expect(result).toBeOk(
+      Cl.tuple({
+        "balance-0": Cl.uint(1000000),
+        "balance-1": Cl.uint(500000),
+        liquidity: Cl.uint(706106 + 1000), // initial liquidity + minimum
+        fee: Cl.uint(500),
+        price: Cl.uint(2000000), // 1000000 * 1000000 / 500000 = 2000000
+      })
+    );
+  });
 });
 
 function createPool() {

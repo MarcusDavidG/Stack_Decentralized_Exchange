@@ -348,6 +348,29 @@
     )
 )
 
+;; get-pool-info
+;; Given a Pool ID, returns detailed pool information including balances, liquidity, fee, and price ratio
+(define-read-only (get-pool-info (pool-id (buff 20)))
+    (let
+        (
+            (pool-data (unwrap! (map-get? pools pool-id) (err u0)))
+            (balance-0 (get balance-0 pool-data))
+            (balance-1 (get balance-1 pool-data))
+            (liquidity (get liquidity pool-data))
+            (fee (get fee pool-data))
+            ;; price as balance-0 / balance-1 with 6 decimal precision
+            (price (if (> balance-1 u0) (/ (* balance-0 u1000000) balance-1) u0))
+        )
+        (ok {
+            balance-0: balance-0,
+            balance-1: balance-1,
+            liquidity: liquidity,
+            fee: fee,
+            price: price
+        })
+    )
+)
+
 
 ;; Ensure that the token-0 principal is "less than" the token-1 principal
 (define-private (correct-token-ordering (token-0 principal) (token-1 principal)) 
