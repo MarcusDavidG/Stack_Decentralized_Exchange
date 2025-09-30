@@ -41,10 +41,16 @@ export function useStacks() {
     setUserData(null);
   }
 
-  async function handleCreatePool(token0: string, token1: string, fee: number) {
+  async function handleCreatePool(
+    token0: string,
+    token1: string,
+    fee: number,
+    name: string,
+    description: string
+  ) {
     try {
       if (!userData) throw new Error("User not connected");
-      const options = await createPool(token0, token1, fee);
+      const options = await createPool(token0, token1, fee, name, description);
       await openContractCall({
         ...options,
         appDetails,
