@@ -8,8 +8,10 @@ export interface PoolsListProps {
 export function PoolsList({ pools }: PoolsListProps) {
   return (
     <div className="flex flex-col">
-      <div className="grid grid-cols-4 place-items-center w-full bg-gray-900 justify-between p-4 font-semibold">
+      <div className="grid grid-cols-6 place-items-center w-full bg-gray-900 justify-between p-4 font-semibold">
         <span>ID</span>
+        <span>Name</span>
+        <span>Description</span>
         <span>Token Pair</span>
         <span>Fee</span>
         <span>Liquidity</span>
@@ -30,8 +32,10 @@ export function PoolListItem({ pool }: { pool: Pool }) {
   const feesInPercentage = pool.fee / 10_000;
 
   return (
-    <div className="grid grid-cols-4 place-items-center w-full bg-gray-800 justify-between p-4">
+    <div className="grid grid-cols-6 place-items-center w-full bg-gray-800 justify-between p-4">
       <span>{pool.id}</span>
+      <span>{pool.name}</span>
+      <span>{pool.description}</span>
       <div className="flex items-center gap-2">
         <Link
           href={`https://explorer.hiro.so/txid/${pool["token-0"]}?chain=testnet`}

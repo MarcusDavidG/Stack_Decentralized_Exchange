@@ -26,7 +26,8 @@
         token-0: principal,
         token-1: principal,
         fee: uint,
-
+        name: (string-ascii 64),
+        description: (string-ascii 128),
         liquidity: uint,
         balance-0: uint,
         balance-1: uint
@@ -47,7 +48,7 @@
 ;; create-pool
 ;; Creates a new pool with the given token-0, token-1, and fee
 ;; Ensures that a pool with these two tokens and given fee amount does not already exist
-(define-public (create-pool (token-0 <ft-trait>) (token-1 <ft-trait>) (fee uint)) 
+(define-public (create-pool (token-0 <ft-trait>) (token-1 <ft-trait>) (fee uint) (name (string-ascii 64)) (description (string-ascii 128))) 
     (let (
         ;; Create a pool-info tuple with the information
         (pool-info {
@@ -69,6 +70,8 @@
             token-0: token-0-principal,
             token-1: token-1-principal,
             fee: (get fee pool-info),
+            name: name,
+            description: description,
             liquidity: u0, ;; initially, liquidity is 0
             balance-0: u0, ;; initially, balance-0 (x) is 0
             balance-1: u0 ;; initially, balance-1 (y) is 0
@@ -422,4 +425,13 @@
 
 (define-private (min (a uint) (b uint)) 
     (if (< a b) a b)
+)
+
+(define-read-only (get-pool-metadata (pool-id (buff 20)))
+    (let
+        (
+            (pool-data (unwrap! (map-get? pools pool-id) (err u0)))
+        )
+        (ok { name: (get name pool-data), description: (get description pool-data) })
+    )
 )

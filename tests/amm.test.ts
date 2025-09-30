@@ -155,13 +155,39 @@ describe("AMM Tests", () => {
       })
     );
   });
+
+  it("creates a pool with metadata", () => {
+    const { result } = createPool("My Pool", "This is a test pool.");
+    expect(result).toBeOk(Cl.bool(true));
+
+    const { result: poolId } = getPoolId();
+    const { result: metadata } = simnet.callReadOnlyFn(
+      "amm",
+      "get-pool-metadata",
+      [poolId],
+      alice
+    );
+
+    expect(metadata).toBeOk(
+      Cl.tuple({
+        name: Cl.stringAscii("My Pool"),
+        description: Cl.stringAscii("This is a test pool."),
+      })
+    );
+  });
 });
 
-function createPool() {
+function createPool(name?: string, description?: string) {
   return simnet.callPublicFn(
     "amm",
     "create-pool",
-    [mockTokenOne, mockTokenTwo, Cl.uint(500)],
+    [
+      mockTokenOne,
+      mockTokenTwo,
+      Cl.uint(500),
+      Cl.stringAscii(name || "test-pool"),
+      Cl.stringAscii(description || "test-description"),
+    ],
     alice
   );
 }

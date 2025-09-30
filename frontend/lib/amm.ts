@@ -8,6 +8,7 @@ import {
   hexToCV,
   principalCV,
   PrincipalCV,
+  stringAsciiCV,
   uintCV,
   UIntCV,
 } from "@stacks/transactions";
@@ -47,6 +48,8 @@ export type Pool = {
   liquidity: number;
   "balance-0": number;
   "balance-1": number;
+  name: string;
+  description: string;
 };
 
 // getAllPools
@@ -122,6 +125,8 @@ export async function getAllPools() {
 
       const poolData = poolDataResult.value.value.value as PoolCV;
 
+      const metadata = await getPoolMetadata(poolId);
+
       // convert the pool data to a Pool object
       const pool: Pool = {
         id: poolId,
@@ -131,6 +136,8 @@ export async function getAllPools() {
         liquidity: parseInt(poolData["liquidity"].value.toString()),
         "balance-0": parseInt(poolData["balance-0"].value.toString()),
         "balance-1": parseInt(poolData["balance-1"].value.toString()),
+        name: metadata?.name || "",
+        description: metadata?.description || "",
       };
 
       pools.push(pool);
@@ -142,7 +149,13 @@ export async function getAllPools() {
   return pools;
 }
 
-export async function createPool(token0: string, token1: string, fee: number) {
+export async function createPool(
+  token0: string,
+  token1: string,
+  fee: number,
+  name: string,
+  description: string
+) {
   const token0Hex = cvToHex(principalCV(token0));
   const token1Hex = cvToHex(principalCV(token1));
   if (token0Hex > token1Hex) {
@@ -153,7 +166,13 @@ export async function createPool(token0: string, token1: string, fee: number) {
     contractAddress: AMM_CONTRACT_ADDRESS,
     contractName: AMM_CONTRACT_NAME,
     functionName: "create-pool",
-    functionArgs: [principalCV(token0), principalCV(token1), uintCV(fee)],
+    functionArgs: [
+      principalCV(token0),
+      principalCV(token1),
+      uintCV(fee),
+      stringAsciiCV(name),
+      stringAsciiCV(description),
+    ],
   };
 
   return txOptions;
@@ -231,6 +250,26 @@ export async function swap(pool: Pool, amount: number, zeroForOne: boolean) {
   };
 
   return txOptions;
+}
+
+export async function getPoolMetadata(poolId: string) {
+  const metadataResult = await fetchCallReadOnlyFunction({
+    contractAddress: AMM_CONTRACT_ADDRESS,
+    contractName: AMM_CONTRACT_NAME,
+    functionName: "get-pool-metadata",
+    functionArgs: [bufferCV(Buffer.from(poolId, "hex"))],
+    senderAddress: AMM_CONTRACT_ADDRESS,
+    network: STACKS_TESTNET,
+  });
+
+  if (metadataResult.type !== "ok") return null;
+  if (metadataResult.value.type !== "tuple") return null;
+
+  const metadata = metadataResult.value.value;
+  return {
+    name: metadata.name.value,
+    description: metadata.description.value,
+  };
 }
 
 export async function getUserLiquidity(pool: Pool, user: string) {

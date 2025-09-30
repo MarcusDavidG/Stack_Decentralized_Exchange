@@ -8,6 +8,8 @@ export function CreatePool() {
   const [token0, setToken0] = useState("");
   const [token1, setToken1] = useState("");
   const [fee, setFee] = useState(500);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
 
   return (
     <div className="flex flex-col max-w-md w-full gap-4 p-6 border border-gray-500 rounded-md">
@@ -44,9 +46,29 @@ export function CreatePool() {
           onChange={(e) => setFee(parseInt(e.target.value))}
         />
       </div>
+      <div className="flex flex-col gap-1">
+        <span className="font-bold">Name</span>
+        <input
+          type="text"
+          className="border-2 border-gray-500 rounded-lg px-4 py-2 text-black"
+          placeholder="Pool Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <span className="font-bold">Description</span>
+        <input
+          type="text"
+          className="border-2 border-gray-500 rounded-lg px-4 py-2 text-black"
+          placeholder="Pool Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
 
       <button
-        onClick={() => handleCreatePool(token0, token1, fee)}
+        onClick={() => handleCreatePool(token0, token1, fee, name, description)}
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       >
         Create Pool
