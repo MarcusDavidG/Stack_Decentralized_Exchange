@@ -26,7 +26,8 @@
         token-0: principal,
         token-1: principal,
         fee: uint,
-
+        name: (string-ascii 64),
+        description: (string-ascii 128),
         liquidity: uint,
         balance-0: uint,
         balance-1: uint
@@ -47,7 +48,7 @@
 ;; create-pool
 ;; Creates a new pool with the given token-0, token-1, and fee
 ;; Ensures that a pool with these two tokens and given fee amount does not already exist
-(define-public (create-pool (token-0 <ft-trait>) (token-1 <ft-trait>) (fee uint)) 
+(define-public (create-pool (token-0 <ft-trait>) (token-1 <ft-trait>) (fee uint) (name (string-ascii 64)) (description (string-ascii 128))) 
     (let (
         ;; Create a pool-info tuple with the information
         (pool-info {
@@ -69,6 +70,8 @@
             token-0: token-0-principal,
             token-1: token-1-principal,
             fee: (get fee pool-info),
+            name: name,
+            description: description,
             liquidity: u0, ;; initially, liquidity is 0
             balance-0: u0, ;; initially, balance-0 (x) is 0
             balance-1: u0 ;; initially, balance-1 (y) is 0
@@ -348,6 +351,29 @@
     )
 )
 
+;; get-pool-info
+;; Given a Pool ID, returns detailed pool information including balances, liquidity, fee, and price ratio
+(define-read-only (get-pool-info (pool-id (buff 20)))
+    (let
+        (
+            (pool-data (unwrap! (map-get? pools pool-id) (err u0)))
+            (balance-0 (get balance-0 pool-data))
+            (balance-1 (get balance-1 pool-data))
+            (liquidity (get liquidity pool-data))
+            (fee (get fee pool-data))
+            ;; price as balance-0 / balance-1 with 6 decimal precision
+            (price (if (> balance-1 u0) (/ (* balance-0 u1000000) balance-1) u0))
+        )
+        (ok {
+            balance-0: balance-0,
+            balance-1: balance-1,
+            liquidity: liquidity,
+            fee: fee,
+            price: price
+        })
+    )
+)
+
 
 ;; Ensure that the token-0 principal is "less than" the token-1 principal
 (define-private (correct-token-ordering (token-0 principal) (token-1 principal)) 
@@ -399,4 +425,13 @@
 
 (define-private (min (a uint) (b uint)) 
     (if (< a b) a b)
+)
+
+(define-read-only (get-pool-metadata (pool-id (buff 20)))
+    (let
+        (
+            (pool-data (unwrap! (map-get? pools pool-id) (err u0)))
+        )
+        (ok { name: (get name pool-data), description: (get description pool-data) })
+    )
 )

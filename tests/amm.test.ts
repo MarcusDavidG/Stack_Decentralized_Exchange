@@ -132,13 +132,62 @@ describe("AMM Tests", () => {
     );
     expect(tokenTwoAmountWithdrawn).toBeLessThan(withdrawableTokenTwoPreSwap);
   });
+
+  it("should return pool info correctly", () => {
+    createPool();
+    addLiquidity(alice, 1000000, 500000);
+
+    const { result: poolId } = getPoolId();
+    const { result } = simnet.callReadOnlyFn(
+      "amm",
+      "get-pool-info",
+      [poolId],
+      alice
+    );
+
+    expect(result).toBeOk(
+      Cl.tuple({
+        "balance-0": Cl.uint(1000000),
+        "balance-1": Cl.uint(500000),
+        liquidity: Cl.uint(706106 + 1000), // initial liquidity + minimum
+        fee: Cl.uint(500),
+        price: Cl.uint(2000000), // 1000000 * 1000000 / 500000 = 2000000
+      })
+    );
+  });
+
+  it("creates a pool with metadata", () => {
+    const { result } = createPool("My Pool", "This is a test pool.");
+    expect(result).toBeOk(Cl.bool(true));
+
+    const { result: poolId } = getPoolId();
+    const { result: metadata } = simnet.callReadOnlyFn(
+      "amm",
+      "get-pool-metadata",
+      [poolId],
+      alice
+    );
+
+    expect(metadata).toBeOk(
+      Cl.tuple({
+        name: Cl.stringAscii("My Pool"),
+        description: Cl.stringAscii("This is a test pool."),
+      })
+    );
+  });
 });
 
-function createPool() {
+function createPool(name?: string, description?: string) {
   return simnet.callPublicFn(
     "amm",
     "create-pool",
-    [mockTokenOne, mockTokenTwo, Cl.uint(500)],
+    [
+      mockTokenOne,
+      mockTokenTwo,
+      Cl.uint(500),
+      Cl.stringAscii(name || "test-pool"),
+      Cl.stringAscii(description || "test-description"),
+    ],
     alice
   );
 }
